@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """
-$File: //user/russell/urth/names.py $
-$Author: russell $
-$DateTime: 2013/02/20 10:36:58 $
 
 Copyright (c) 2010-2015 Russell Borogove. All rights reserved. 
 
