@@ -66,6 +66,8 @@ Lists which include names coming from different languages are more likely to gen
 
 ### Future Work
 
+Command line options for flexible standalone use.
+
 Verify behavior with right-to-left languages.
 
 Improve name lists.
