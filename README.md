@@ -28,7 +28,10 @@ The input files are UTF-8, so let's have a name for a pseudo-Norse god.
 ~~~
 >>> print names.gen_names( ['norsem'] )
 Þorn
-~~~
+~~~  
+
+(That's a thorn, not a pee. Porn is not a good name for a Norse god.)
+
 
 My character concept is... a pseudo-French woman with a quasi-Japanese father, whose mother read a lot of fantasy novels!
 
