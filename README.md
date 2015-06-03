@@ -37,7 +37,7 @@ My character concept is... a pseudo-French woman with a quasi-Japanese father, w
 Jestée Lyona Harasahiro                                                             
 ~~~
 
-The module also does pseudo-Bayer star names:
+The module also does pseudo-Bayer star names based on made-up constellations:
 
 ~~~
 >>> print names.gen_star_name()
