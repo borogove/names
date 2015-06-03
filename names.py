@@ -147,7 +147,7 @@ def gen_names( sourceSequence ):
         
     return " ".join(generated)
  
-def gen_name( nameset, minlen, maxlen ):
+def gen_name( nameset, minlen=3, maxlen=15 ):
     return markov.gen_name( nameset, minlen, maxlen )          
      
 # =====================================================================
