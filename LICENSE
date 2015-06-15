@@ -1,4 +1,6 @@
 The MIT License (MIT)
+                     
+Names - a Python utility to generate random names via Markov chains
 
 Copyright (c) 2015 Russell Borogove
 
