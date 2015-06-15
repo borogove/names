@@ -7,8 +7,11 @@ Copyright (c) 2010-2015 Russell Borogove. All rights reserved.
 
 """  
 
+import sys
+import argparse
 import os
 import random
+
 from collections import defaultdict
 
 NAME_DATA_FOLDER = "./namedata"
@@ -140,20 +143,19 @@ def gen_star_name():
   
 
 # Generate a "full name" given a sequence 
-def gen_names( sourceSequence ):
+def gen_names( sourceSequence, minlen=3, maxlen=13 ):
     generated = []
     for source in sourceSequence:
-        generated.append( markov.gen_name( source, 3, 15 ) )
+        generated.append( markov.gen_name( source, minlen, maxlen ) )
         
     return " ".join(generated)
  
-def gen_name( nameset, minlen=3, maxlen=15 ):
+def gen_name( nameset, minlen=3, maxlen=13 ):
     return markov.gen_name( nameset, minlen, maxlen )          
      
 # =====================================================================
 
-if __name__ == "__main__": 
-     
+def tests(): 
     # Generate a star name.
     print gen_star_name()
                           
@@ -165,7 +167,7 @@ if __name__ == "__main__":
     # Produce several pages of names for your RPG setting - print 'em out, and 
     # when you introduce an NPC, pick a name off an appropriate list and cross it off.
     groups = [  ("Island Provinces", ["arthurianm", "arthurianf", "normanm", "normanf", "normansur", "saxonm", "saxonf"] ),
-                ("Western Lands", ["asteroids", "albanianm", "albanianf" ] ),
+                ("Western Lands", ["albanianm", "albanianf" ] ),
                 ("Old Lands", ["provinces","engbynames","englocalities","engtradenames"] ),
                 ("Desert Nomads", ["arabicm","arabicf"] ),
                 ("Other", ["all"] ) ]
@@ -173,8 +175,38 @@ if __name__ == "__main__":
     for group,nameSets in groups:
         print "%s Names"%group
         for name in range(47):       
-            col1 = markov.gen_name( random.choice(nameSets), 3, 13 )   
-            col2 = markov.gen_name( random.choice(nameSets), 3, 13 )  
-            col3 = markov.gen_name( random.choice(nameSets), 3, 13 )  
+            col1 = gen_name( random.choice(nameSets) )   
+            col2 = gen_name( random.choice(nameSets) )  
+            col3 = gen_name( random.choice(nameSets) )  
             print "  %15s %15s %15s"%(col1,col2,col3)
-        print 
+        print   
+    
+if __name__ == "__main__": 
+    parser = argparse.ArgumentParser()       
+    
+    parser.add_argument( '--count', help="number of names to generate", type=int, default=1 )
+    parser.add_argument( '--sequence', help="use name sets in order instead of randomly", action='store_true', default=False )
+    parser.add_argument( '--star', help="generate a star name in a fictional constellation", action='store_true',default=False )
+    parser.add_argument( '--min', help="minimum name length", default=3 )
+    parser.add_argument( '--max', help="maximum name length", default=13 )
+    
+    options,sets = parser.parse_known_args( sys.argv[1:] )  
+        
+    results = []
+    if options.star:
+        results = [ gen_star_name() for _ in range( options.count ) ]
+    elif options.sequence:     
+        results = [ gen_names( sets, options.min, options.max ) for _ in range( options.count ) ]         
+    else:
+        results = [ gen_name( random.choice( sets ) ) for _ in range( options.count ) ] 
+                 
+    for result in results:
+        print result
+
+
+        
+        
+
+       
+    
+     
