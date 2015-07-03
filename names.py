@@ -3,9 +3,9 @@
 
 """
 
-Copyright (c) 2010-2015 Russell Borogove. All rights reserved. 
+Copyright (c) 2010-2015 Russell Borogove. All rights reserved.
 
-"""  
+"""
 
 import sys
 import argparse
@@ -15,20 +15,20 @@ import random
 from collections import defaultdict
 
 NAME_DATA_FOLDER = "./namedata"
-GREEK_ALPHABET = """Alpha 
-Beta 
-Gamma  
-Delta  
+GREEK_ALPHABET = """Alpha
+Beta
+Gamma
+Delta
 Epsilon
-Zeta   
-Eta  
-Theta  
-Iota   
-Kappa  
-Lambda 
-Mu	
-Nu	
-Xi	
+Zeta
+Eta
+Theta
+Iota
+Kappa
+Lambda
+Mu
+Nu
+Xi
 Omicron
 Pi
 Rho
@@ -38,7 +38,7 @@ Upsilon
 Phi
 Chi
 Psi
-Omega""".split()  
+Omega""".split()
 
 # == MARKOV CHAIN BASED NAMER =========================================
 
@@ -47,7 +47,7 @@ class MarkovChainNamer( object ):
         self.chains = defaultdict(list)
         self.splat = defaultdict(str)
         # Read all the name data files we have provided.
-        self.load_name_data()  
+        self.load_name_data()
 
     def next( self, setname, current ):
         if not current:
@@ -57,11 +57,11 @@ class MarkovChainNamer( object ):
             if k:
                 if (setname,k) in self.chains:
                     return random.choice( self.chains[(setname,k)] )
-                k = k[1:]   
+                k = k[1:]
             else:
                 return random.choice(self.splat[setname])
 
-     
+
 
     def load_chains( self, setname, name ):
         if not name:
@@ -74,19 +74,19 @@ class MarkovChainNamer( object ):
                 seq = name[i:i+count]
                 if len(seq) > 1:
                     prefix = seq[:-1]
-                    self.chains[(setname,prefix)].append( seq[-1] ) 
- 
+                    self.chains[(setname,prefix)].append( seq[-1] )
+
 
     def load_one( self, setname, filename ):
         names = [line.strip() for line in open(os.path.join(NAME_DATA_FOLDER,filename),'rt').readlines()]
         for name in names:
             if name.startswith('#'):
-                continue                
+                continue
             # Keep everything as unicode internally
-            name = name.decode('utf-8')   
+            name = name.decode('utf-8')
             self.load_chains( setname, name )
             self.load_chains( "all", name )
-    
+
 
     def load_name_data(self):
         for fn in os.listdir( NAME_DATA_FOLDER ):
@@ -96,13 +96,13 @@ class MarkovChainNamer( object ):
 
     def gen_name( self, nameset, minlen, maxlen ):
         ok = False
-                         
+
         if nameset not in self.splat:
             raise ValueError("Nameset %s not loaded"%nameset)
-            
+
         while not ok:
             name = "^"
-    
+
             while len(name) < maxlen:
                 next = self.next( nameset, name )
                 if next != "|":
@@ -111,15 +111,15 @@ class MarkovChainNamer( object ):
                     if len(name) > minlen:
                         ok=True
                     break
-    
+
         return name.replace("^","")
 
 
 # == SELECTOR =========================================================
 
-markov = MarkovChainNamer()    
+markov = MarkovChainNamer()
 
-# A function to name a star using Bayer-style names in made-up  
+# A function to name a star using Bayer-style names in made-up
 # constellations with pseudo-latin names.
 def gen_star_name():
     # Generate a pseudo-latin constellation name.
@@ -128,85 +128,79 @@ def gen_star_name():
     else:
         constellation = markov.gen_name( "latinf", 5, 16 )
 
-    # Choose a rank for the star within the constellation; 
-    # making the brighter ranks (Alpha, Beta...) more likely 
+    # Choose a rank for the star within the constellation;
+    # making the brighter ranks (Alpha, Beta...) more likely
     # because we're magnitude elitists.
     rank = random.randrange(5)
     while random.randrange(2):
         rank += 1
-    # Take that ranked Greek letter; if we rolled an 
-    # extraordinarily high rank, just wrap around the list.            
+    # Take that ranked Greek letter; if we rolled an
+    # extraordinarily high rank, just wrap around the list.
     rankname = GREEK_ALPHABET[ rank % 24 ]
-    
-    # for example, "Epsilon Athanatille"
-    return "%s %s"%(rankname,constellation)    
-  
 
-# Generate a "full name" given a sequence 
+    # for example, "Epsilon Athanatille"
+    return "%s %s"%(rankname,constellation)
+
+
+# Generate a "full name" given a sequence
 def gen_names( sourceSequence, minlen=3, maxlen=13 ):
     generated = []
     for source in sourceSequence:
         generated.append( markov.gen_name( source, minlen, maxlen ) )
-        
+
     return " ".join(generated)
- 
+
 def gen_name( nameset, minlen=3, maxlen=13 ):
-    return markov.gen_name( nameset, minlen, maxlen )          
-     
+    return markov.gen_name( nameset, minlen, maxlen )
+
 # =====================================================================
 
-def tests(): 
+def tests():
     # Generate a star name.
     print gen_star_name()
-                          
-    # Generate an individual person's full name - in this case, a pseudo-French woman 
+
+    # Generate an individual person's full name - in this case, a pseudo-French woman
     # with a quasi-Japanese father, whose mother read a lot of fantasy novels.
     # example result: Jestée Lyona Harasahiro
     print gen_names( ["frenchf","arthurianf","japansur"] )
-    
-    # Produce several pages of names for your RPG setting - print 'em out, and 
+
+    # Produce several pages of names for your RPG setting - print 'em out, and
     # when you introduce an NPC, pick a name off an appropriate list and cross it off.
     groups = [  ("Island Provinces", ["arthurianm", "arthurianf", "normanm", "normanf", "normansur", "saxonm", "saxonf"] ),
                 ("Western Lands", ["albanianm", "albanianf" ] ),
                 ("Old Lands", ["provinces","engbynames","englocalities","engtradenames"] ),
                 ("Desert Nomads", ["arabicm","arabicf"] ),
                 ("Other", ["all"] ) ]
-     
+
     for group,nameSets in groups:
         print "%s Names"%group
-        for name in range(47):       
-            col1 = gen_name( random.choice(nameSets) )   
-            col2 = gen_name( random.choice(nameSets) )  
-            col3 = gen_name( random.choice(nameSets) )  
+        for name in range(47):
+            col1 = gen_name( random.choice(nameSets) )
+            col2 = gen_name( random.choice(nameSets) )
+            col3 = gen_name( random.choice(nameSets) )
             print "  %15s %15s %15s"%(col1,col2,col3)
-        print   
-    
-if __name__ == "__main__": 
-    parser = argparse.ArgumentParser()       
-    
+        print
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
     parser.add_argument( '--count', help="number of names to generate", type=int, default=1 )
     parser.add_argument( '--sequence', help="use name sets in order instead of randomly", action='store_true', default=False )
     parser.add_argument( '--star', help="generate a star name in a fictional constellation", action='store_true',default=False )
     parser.add_argument( '--min', help="minimum name length", default=3 )
     parser.add_argument( '--max', help="maximum name length", default=13 )
-    
-    options,sets = parser.parse_known_args( sys.argv[1:] )  
-        
+
+    options,sets = parser.parse_known_args( sys.argv[1:] )
+
+    if not sets:
+        sets = ["all"]
     results = []
     if options.star:
         results = [ gen_star_name() for _ in range( options.count ) ]
-    elif options.sequence:     
-        results = [ gen_names( sets, options.min, options.max ) for _ in range( options.count ) ]         
+    elif options.sequence:
+        results = [ gen_names( sets, options.min, options.max ) for _ in range( options.count ) ]
     else:
-        results = [ gen_name( random.choice( sets ) ) for _ in range( options.count ) ] 
-                 
+        results = [ gen_name( random.choice( sets ) ) for _ in range( options.count ) ]
+
     for result in results:
         print result
-
-
-        
-        
-
-       
-    
-     
