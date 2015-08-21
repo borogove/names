@@ -13,6 +13,7 @@ usage: names.py [-h]
                 [--star] 
                 [--min MIN]
                 [--max MAX]
+                [--new]
 
 optional arguments:
   -h, --help     show this help message and exit
