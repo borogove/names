@@ -81,7 +81,7 @@ Beta Ambertus
 ~~~
 
 If it's important that the results not include a word in the source list,
-you can add the --new option. For example, if you want a flower species 
+you can add the `--new` option. For example, if you want a flower species 
 name that is not the name of any real flower: 
 
 ~~~
