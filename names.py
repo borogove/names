@@ -1,4 +1,4 @@
-#!/usr/bin/ppython
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -14,7 +14,9 @@ import random
 
 from collections import defaultdict
 
-NAME_DATA_FOLDER = "./namedata"
+HOME_FOLDER = os.path.dirname(sys.argv[0])
+NAME_DATA_FOLDER = "namedata"
+
 GREEK_ALPHABET = """Alpha
 Beta
 Gamma
@@ -40,14 +42,19 @@ Chi
 Psi
 Omega""".split()
 
+defaults = argparse.Namespace()
+defaults.count = 1
+defaults.min = 4
+defaults.max = 13
+defaults.new = False
+
 # == MARKOV CHAIN BASED NAMER =========================================
 
 class MarkovChainNamer( object ):
     def __init__(self):
         self.chains = defaultdict(list)
         self.splat = defaultdict(str)
-        # Read all the name data files we have provided.
-        self.load_name_data()
+        self.source = defaultdict(list)
 
     def next( self, setname, current ):
         if not current:
@@ -61,11 +68,10 @@ class MarkovChainNamer( object ):
             else:
                 return random.choice(self.splat[setname])
 
-
-
     def load_chains( self, setname, name ):
         if not name:
             return
+        self.source[setname].append(name)
         name = "^" + name + "|"
         self.splat[setname] = self.splat[setname] + name
         # initials[setname] = initials[setname] + name[0]
@@ -77,8 +83,8 @@ class MarkovChainNamer( object ):
                     self.chains[(setname,prefix)].append( seq[-1] )
 
 
-    def load_one( self, setname, filename ):
-        names = [line.strip() for line in open(os.path.join(NAME_DATA_FOLDER,filename),'rt').readlines()]
+    def load_dataset_file( self, setname, filepath ):
+        names = [line.strip() for line in open(filepath,'rt').readlines()]
         for name in names:
             if name.startswith('#'):
                 continue
@@ -87,33 +93,56 @@ class MarkovChainNamer( object ):
             self.load_chains( setname, name )
             self.load_chains( "all", name )
 
-
-    def load_name_data(self):
-        for fn in os.listdir( NAME_DATA_FOLDER ):
+    
+    def load_dataset( self, setname ):
+        if setname == "all":
+            self.load_all_name_data()
+        else:            
+            path = os.path.join( HOME_FOLDER, NAME_DATA_FOLDER, setname+".txt" )
+            if os.path.exists(path):
+                self.load_dataset_file( setname, path )
+            else:
+                print "Error: name data file '%s' not found."%(path)
+                sys.exit(-1)
+            
+    def load_all_name_data(self):
+        for fn in os.listdir( os.path.join( HOME_FOLDER, NAME_DATA_FOLDER ) ):
             if fn.endswith(".txt"):
-                base, ext = os.path.splitext(fn)
-                self.load_one( base, fn )
+                setname, ext = os.path.splitext(fn)
+                path = os.path.join( HOME_FOLDER, NAME_DATA_FOLDER, setname+".txt" )
+                self.load_dataset_file( setname, path )
 
-    def gen_name( self, nameset, minlen, maxlen ):
+    def _gen_name( self, setname, options ):
         ok = False
-
-        if nameset not in self.splat:
-            raise ValueError("Nameset %s not loaded"%nameset)
+        
+        if setname not in self.splat:
+            self.load_dataset(setname)
 
         while not ok:
             name = "^"
-
-            while len(name) < maxlen:
-                next = self.next( nameset, name )
+            
+            while len(name) < options.max:
+                next = self.next( setname, name )
                 if next != "|":
                     name += next
                 else:
-                    if len(name) > minlen:
+                    if len(name) > options.min:
                         ok=True
                     break
 
         return name.replace("^","")
 
+    def gen_name( self, setname, options ):
+        acceptable = False
+        while not acceptable:
+            name = self._gen_name( setname, options )
+            if not options.new:
+                acceptable = True
+            else:
+                # compare the generated name against existing names for the set
+                if name not in self.source[setname]:
+                    acceptable = True
+        return name    
 
 # == SELECTOR =========================================================
 
@@ -121,12 +150,12 @@ markov = MarkovChainNamer()
 
 # A function to name a star using Bayer-style names in made-up
 # constellations with pseudo-latin names.
-def gen_star_name():
+def gen_star_name( options = defaults ):
     # Generate a pseudo-latin constellation name.
     if random.randrange(2):
-        constellation = markov.gen_name( "latinm", 7, 16 )
-    else:
-        constellation = markov.gen_name( "latinf", 5, 16 )
+        constellation = markov.gen_name( "latinm", options )
+    else:                                                     
+        constellation = markov.gen_name( "latinf", options )
 
     # Choose a rank for the star within the constellation;
     # making the brighter ranks (Alpha, Beta...) more likely
@@ -143,15 +172,15 @@ def gen_star_name():
 
 
 # Generate a "full name" given a sequence
-def gen_names( sourceSequence, minlen=3, maxlen=13 ):
+def gen_names( sourceSequence, options = defaults ):
     generated = []
     for source in sourceSequence:
-        generated.append( markov.gen_name( source, minlen, maxlen ) )
+        generated.append( markov.gen_name( source, options ) )
 
     return " ".join(generated)
 
-def gen_name( nameset, minlen=3, maxlen=13 ):
-    return markov.gen_name( nameset, minlen, maxlen )
+def gen_name( setname, options = defaults ):
+    return markov.gen_name( setname, options )
 
 # =====================================================================
 
@@ -172,12 +201,12 @@ def tests():
                 ("Desert Nomads", ["arabicm","arabicf"] ),
                 ("Other", ["all"] ) ]
 
-    for group,nameSets in groups:
+    for group,setnames in groups:
         print "%s Names"%group
-        for name in range(47):
-            col1 = gen_name( random.choice(nameSets) )
-            col2 = gen_name( random.choice(nameSets) )
-            col3 = gen_name( random.choice(nameSets) )
+        for name in range(3):
+            col1 = gen_name( random.choice(setnames) )
+            col2 = gen_name( random.choice(setnames) )
+            col3 = gen_name( random.choice(setnames) )
             print "  %15s %15s %15s"%(col1,col2,col3)
         print
 
@@ -187,8 +216,9 @@ if __name__ == "__main__":
     parser.add_argument( '--count', help="number of names to generate", type=int, default=1 )
     parser.add_argument( '--sequence', help="use name sets in order instead of randomly", action='store_true', default=False )
     parser.add_argument( '--star', help="generate a star name in a fictional constellation", action='store_true',default=False )
-    parser.add_argument( '--min', help="minimum name length", default=3 )
-    parser.add_argument( '--max', help="maximum name length", default=13 )
+    parser.add_argument( '--min', help="minimum name length", type=int, default=4 )
+    parser.add_argument( '--max', help="maximum name length", type=int, default=13 )
+    parser.add_argument( '--new', help="reject names appearing in source data", action='store_true', default=False )
 
     options,sets = parser.parse_known_args( sys.argv[1:] )
 
@@ -196,11 +226,11 @@ if __name__ == "__main__":
         sets = ["all"]
     results = []
     if options.star:
-        results = [ gen_star_name() for _ in range( options.count ) ]
+        results = [ gen_star_name( options ) for _ in range( options.count ) ]
     elif options.sequence:
-        results = [ gen_names( sets, options.min, options.max ) for _ in range( options.count ) ]
+        results = [ gen_names( sets, options ) for _ in range( options.count ) ]
     else:
-        results = [ gen_name( random.choice( sets ) ) for _ in range( options.count ) ]
+        results = [ gen_name( random.choice( sets ), options ) for _ in range( options.count ) ]
 
     for result in results:
         print result

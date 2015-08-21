@@ -21,6 +21,7 @@ optional arguments:
   --star         generate a star name in a fictional constellation
   --min MIN      minimum name length
   --max MAX      maximum name length
+  --new          reject names appearing in source data
 ~~~
 
 ### Examples
@@ -77,9 +78,20 @@ It also does pseudo-Bayer star names based on made-up constellations:
 : python names.py --star
 Beta Ambertus
 ~~~
+
+If it's important that the results not include a word in the source list,
+you can add the --new option. For example, if you want a flower species 
+name that is not the name of any real flower: 
+
+~~~
+: python names.py --sequence --new --min 6 --max 18 flowergenus flowerspecies
+Uvetinia proccanus
+~~~
      
 #### Use as a module
-Import the module and load the name data files. This can take a few seconds.
+
+Import the module. Name data sets are loaded on demand; the 
+first time you use a given set it may pause briefly.
 
 ~~~
 : python
@@ -89,19 +101,17 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import names
 ~~~
 
+To get a single name:
+~~~
+>>> print names.gen_name( 'norsem' )
+Þorn
+~~~  
+
 You can do name sequences here too:
 
 ~~~
 >>> print names.gen_names( ['engf','engsur'] )
 Lina Fitter
-~~~
-
-~~~
->>> print names.gen_names( ['norsem'] )
-Þorn
-~~~  
-
-~~~
 >>> print names.gen_names( ['frenchf','arthurianf','japansur'] )
 Jestée Lyona Harasahiro                                                             
 ~~~
@@ -122,14 +132,23 @@ And stars.
 Beta Agapidus
 ~~~
 
-You can explicitly control the minimum and maximum name length yielded:
+For finer control, you can use an `argparse.Namespace` as a option container, 
+using the same options as on the command line:
 
 ~~~
->>> print names.gen_name( 'engsur', 40, 120 )
-Wienstowersonettermannetenthsteraffieder
+>>> import argparse
+>>> long_name = argparse.Namespace()
+>>> long_name.count = 1
+>>> long_name.min = 20
+>>> long_name.max = 80
+>>> long_name.new = False
+>>> print names.gen_name( 'engsur', long_name )
+Browichmasstowiteraumpben
 ~~~
 
-...though at present the algorithm isn't guaranteed to terminate with all combinations of length limits and source lists, so use this option with caution. 
+...though at present the algorithm isn't guaranteed to terminate 
+with all combinations of length limits and source lists, so use 
+this option with caution. 
 
 
 ### Name Sets 
@@ -153,7 +172,8 @@ arabicm          czechm         frenchm         latinf          saxonf
 arthurianf       czechsur       frenchsur       latinm          saxonm
 arthurianm       engbynames     gothf           normanf         sumerianf
 asteroids        engf           gothm           normanm         sumerianm
-azerbaijanf      englocalities  incaf           normansur       swedishm   
+azerbaijanf      englocalities  incaf           normansur       swedishm 
+flowergenus      flowerspecies  
 ~~~  
 
 ### Future Work
