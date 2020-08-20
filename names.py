@@ -14,7 +14,7 @@ import random
 
 from collections import defaultdict
 
-HOME_FOLDER = os.path.dirname(sys.argv[0])
+HOME_FOLDER = os.path.dirname(os.path.abspath(__file__))
 NAME_DATA_FOLDER = "namedata"
 
 GREEK_ALPHABET = """Alpha
